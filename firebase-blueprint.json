@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "LandingSettings": {
+      "title": "LandingSettings",
+      "description": "Settings for the landing page",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the ebook or landing page"
+        },
+        "description": {
+          "type": "string",
+          "description": "The description text for the landing page"
+        },
+        "heroImage": {
+          "type": "string",
+          "description": "The URL of the hero image"
+        },
+        "ctaText": {
+          "type": "string",
+          "description": "The text for the call to action button"
+        }
+      },
+      "required": ["title", "description", "heroImage", "ctaText"]
+    },
+    "EbookPage": {
+      "title": "EbookPage",
+      "description": "A single page in the ebook",
+      "type": "object",
+      "properties": {
+        "pageNumber": {
+          "type": "number",
+          "description": "The sequential number of the page"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of image URLs for this page"
+        },
+        "text": {
+          "type": "string",
+          "description": "Optional text content for the page"
+        }
+      },
+      "required": ["pageNumber", "images"]
+    }
+  },
+  "firestore": {
+    "/settings/{settingId}": {
+      "schema": {
+        "$ref": "#/entities/LandingSettings"
+      },
+      "description": "Global settings for the application"
+    },
+    "/pages/{pageId}": {
+      "schema": {
+        "$ref": "#/entities/EbookPage"
+      },
+      "description": "Pages of the ebook"
+    }
+  }
+}

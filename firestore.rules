@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: settings
+    // Document ID: landing
+    // Fields:
+    //   - title: string
+    //   - description: string
+    //   - heroImage: string
+    //   - ctaText: string
+    //
+    // Collection: pages
+    // Document ID: auto-generated
+    // Fields:
+    //   - pageNumber: number
+    //   - images: list of strings
+    //   - text: string (optional)
+    //
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidLandingSettings() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['title', 'description', 'heroImage', 'ctaText']) &&
+             data.title is string && data.title.size() < 1000 &&
+             data.description is string && data.description.size() < 50000 &&
+             data.heroImage is string && data.heroImage.size() < 100000 &&
+             data.ctaText is string && data.ctaText.size() < 500;
+    }
+
+    function isValidEbookPage() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['pageNumber', 'images']) &&
+             data.pageNumber is number && data.pageNumber >= 0 &&
+             data.images is list && data.images.size() <= 50 &&
+             (!('text' in data) || (data.text is string && data.text.size() < 10000));
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated() && isValidLandingSettings();
+      allow delete: if isAuthenticated();
+    }
+
+    match /pages/{pageId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated() && isValidEbookPage();
+      allow delete: if isAuthenticated();
+    }
+  }
+}
