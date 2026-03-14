@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { motion } from 'framer-motion';
@@ -10,24 +10,27 @@ interface LandingSettings {
   description: string;
   heroImage: string;
   ctaText: string;
+  accessCode: string;
 }
 
 export default function LandingPage() {
+  const { ebookId } = useParams<{ ebookId: string }>();
   const [settings, setSettings] = useState<LandingSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'settings', 'landing'), (docSnap) => {
+    if (!ebookId) return;
+    const unsub = onSnapshot(doc(db, 'ebooks', ebookId), (docSnap) => {
       if (docSnap.exists()) {
         setSettings(docSnap.data() as LandingSettings);
       }
       setLoading(false);
     });
     return () => unsub();
-  }, []);
+  }, [ebookId]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-400">Loading...</div>;
   }
 
   // Default fallback if no settings exist yet
@@ -35,14 +38,15 @@ export default function LandingPage() {
     title: "The Untold Story",
     description: "Discover a journey through time and space. This is a placeholder description until the admin updates the content.",
     heroImage: "https://picsum.photos/seed/ebook/400/600",
-    ctaText: "Get Started"
+    ctaText: "Get Started",
+    accessCode: ""
   };
 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen flex flex-col md:flex-row relative overflow-hidden"
+      className="min-h-screen flex flex-col md:flex-row relative overflow-hidden bg-zinc-950"
     >
       {/* Admin Settings Icon */}
       <Link 
@@ -102,7 +106,7 @@ export default function LandingPage() {
             transition={{ delay: 0.5 }}
           >
             <Link 
-              to="/ebook"
+              to={`/ebook/${ebookId}/read`}
               className="inline-flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-medium hover:bg-zinc-200 transition-colors group"
             >
               {displaySettings.ctaText}

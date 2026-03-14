@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Keyboard, Virtual } from 'swiper/modules';
 import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -21,11 +23,13 @@ interface EbookPage {
 }
 
 export default function EbookReader() {
+  const { ebookId } = useParams<{ ebookId: string }>();
   const [pages, setPages] = useState<EbookPage[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'pages'), orderBy('pageNumber', 'asc'));
+    if (!ebookId) return;
+    const q = query(collection(db, `ebooks/${ebookId}/pages`), orderBy('pageNumber', 'asc'));
     const unsub = onSnapshot(q, (snapshot) => {
       const fetchedPages = snapshot.docs.map(doc => {
         const data = doc.data();
@@ -39,7 +43,7 @@ export default function EbookReader() {
       setLoading(false);
     });
     return () => unsub();
-  }, []);
+  }, [ebookId]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-400">Loading pages...</div>;
@@ -49,7 +53,7 @@ export default function EbookReader() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 text-zinc-400 gap-4">
         <p>No pages found. The admin needs to add some content.</p>
-        <Link to="/" className="text-emerald-400 hover:underline">Return Home</Link>
+        <Link to={`/ebook/${ebookId}/start`} className="text-emerald-400 hover:underline">Return to Start</Link>
       </div>
     );
   }
@@ -62,7 +66,7 @@ export default function EbookReader() {
     >
       {/* Top Navigation */}
       <header className="flex items-center justify-between p-6 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md z-50">
-        <Link to="/" className="p-2 hover:bg-white/10 rounded-full transition-colors">
+        <Link to={`/ebook/${ebookId}/start`} className="p-2 hover:bg-white/10 rounded-full transition-colors">
           <Home className="w-5 h-5 text-zinc-400" />
         </Link>
         <div className="text-sm font-medium tracking-widest uppercase text-zinc-500">
@@ -84,41 +88,49 @@ export default function EbookReader() {
           pagination={{ type: 'fraction', el: '.swiper-pagination-custom' }}
           keyboard={{ enabled: true }}
           virtual
-          className="w-full h-full max-w-5xl mx-auto"
+          className="w-full h-full max-w-7xl mx-auto"
         >
           {pages.map((page, index) => (
             <SwiperSlide key={page.id} virtualIndex={index}>
-              <div className="flex flex-col items-center justify-center h-full p-8 md:p-16 overflow-y-auto">
-                <div className="w-full max-w-3xl space-y-8">
-                  {/* Dynamic Image Layout */}
+              <div className="flex flex-col md:flex-row items-center justify-center h-full p-8 md:p-16 overflow-y-auto gap-8 md:gap-16">
+                
+                {/* Text on the Left */}
+                <div className="w-full md:w-1/2 flex flex-col justify-center">
+                  {page.text ? (
+                    <div className="prose prose-invert prose-lg max-w-none text-zinc-300 font-serif leading-relaxed whitespace-pre-wrap">
+                      {page.text}
+                    </div>
+                  ) : (
+                    <div className="text-zinc-600 italic">No text for this page.</div>
+                  )}
+                </div>
+
+                {/* Images on the Right */}
+                <div className="w-full md:w-1/2 flex flex-col justify-center">
                   <div className={`grid gap-4 ${
                     page.images.length === 1 ? 'grid-cols-1' :
-                    page.images.length === 2 ? 'grid-cols-2' :
-                    page.images.length === 3 ? 'grid-cols-2 md:grid-cols-3' :
+                    page.images.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                    page.images.length === 3 ? 'grid-cols-2' :
                     'grid-cols-2'
                   }`}>
                     {page.images.map((img, i) => (
-                      <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-zinc-900 border border-white/5">
+                      <div key={i} className="relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 border border-white/5">
                         {img && (
-                          <img 
-                            src={img} 
-                            alt={`Page ${page.pageNumber} Image ${i + 1}`}
-                            loading="lazy"
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
+                          <Zoom>
+                            <img 
+                              src={img} 
+                              alt={`Page ${page.pageNumber} Image ${i + 1}`}
+                              loading="lazy"
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          </Zoom>
                         )}
                       </div>
                     ))}
                   </div>
-
-                  {/* Optional Text */}
-                  {page.text && (
-                    <div className="prose prose-invert prose-lg max-w-none text-zinc-300 font-serif leading-relaxed whitespace-pre-wrap">
-                      {page.text}
-                    </div>
-                  )}
                 </div>
+
               </div>
             </SwiperSlide>
           ))}

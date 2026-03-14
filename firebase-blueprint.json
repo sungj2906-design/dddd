@@ -1,8 +1,8 @@
 {
   "entities": {
-    "LandingSettings": {
-      "title": "LandingSettings",
-      "description": "Settings for the landing page",
+    "Ebook": {
+      "title": "Ebook",
+      "description": "An ebook with its settings and access code",
       "type": "object",
       "properties": {
         "title": {
@@ -20,9 +20,13 @@
         "ctaText": {
           "type": "string",
           "description": "The text for the call to action button"
+        },
+        "accessCode": {
+          "type": "string",
+          "description": "The code required to access this ebook"
         }
       },
-      "required": ["title", "description", "heroImage", "ctaText"]
+      "required": ["title", "description", "heroImage", "ctaText", "accessCode"]
     },
     "EbookPage": {
       "title": "EbookPage",
@@ -49,17 +53,17 @@
     }
   },
   "firestore": {
-    "/settings/{settingId}": {
+    "/ebooks/{ebookId}": {
       "schema": {
-        "$ref": "#/entities/LandingSettings"
+        "$ref": "#/entities/Ebook"
       },
-      "description": "Global settings for the application"
+      "description": "Ebooks in the application"
     },
-    "/pages/{pageId}": {
+    "/ebooks/{ebookId}/pages/{pageId}": {
       "schema": {
         "$ref": "#/entities/EbookPage"
       },
-      "description": "Pages of the ebook"
+      "description": "Pages of a specific ebook"
     }
   }
 }

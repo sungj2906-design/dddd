@@ -4,6 +4,7 @@
  */
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
 import EbookReader from './pages/EbookReader';
 import AdminDashboard from './pages/AdminDashboard';
@@ -43,8 +44,9 @@ export default function App() {
     <Router>
       <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-emerald-500/30">
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/ebook" element={<EbookReader />} />
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/ebook/:ebookId/start" element={<LandingPage />} />
+          <Route path="/ebook/:ebookId/read" element={<EbookReader />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </div>

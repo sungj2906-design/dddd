@@ -5,15 +5,16 @@ service cloud.firestore {
     // Assumed Data Model
     // ===============================================================
     //
-    // Collection: settings
-    // Document ID: landing
+    // Collection: ebooks
+    // Document ID: auto-generated
     // Fields:
     //   - title: string
     //   - description: string
     //   - heroImage: string
     //   - ctaText: string
+    //   - accessCode: string
     //
-    // Collection: pages
+    // Collection: ebooks/{ebookId}/pages
     // Document ID: auto-generated
     // Fields:
     //   - pageNumber: number
@@ -26,13 +27,14 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isValidLandingSettings() {
+    function isValidEbook() {
       let data = request.resource.data;
-      return data.keys().hasAll(['title', 'description', 'heroImage', 'ctaText']) &&
+      return data.keys().hasAll(['title', 'description', 'heroImage', 'ctaText', 'accessCode']) &&
              data.title is string && data.title.size() < 1000 &&
              data.description is string && data.description.size() < 50000 &&
              data.heroImage is string && data.heroImage.size() < 100000 &&
-             data.ctaText is string && data.ctaText.size() < 500;
+             data.ctaText is string && data.ctaText.size() < 500 &&
+             data.accessCode is string && data.accessCode.size() < 100;
     }
 
     function isValidEbookPage() {
@@ -43,16 +45,16 @@ service cloud.firestore {
              (!('text' in data) || (data.text is string && data.text.size() < 10000));
     }
 
-    match /settings/{settingId} {
+    match /ebooks/{ebookId} {
       allow read: if true;
-      allow create, update: if isAuthenticated() && isValidLandingSettings();
+      allow create, update: if isAuthenticated() && isValidEbook();
       allow delete: if isAuthenticated();
-    }
-
-    match /pages/{pageId} {
-      allow read: if true;
-      allow create, update: if isAuthenticated() && isValidEbookPage();
-      allow delete: if isAuthenticated();
+      
+      match /pages/{pageId} {
+        allow read: if true;
+        allow create, update: if isAuthenticated() && isValidEbookPage();
+        allow delete: if isAuthenticated();
+      }
     }
   }
 }
